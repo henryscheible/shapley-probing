@@ -31,8 +31,6 @@ def load_model():
 
 def process_dataset(dataset, tokenizer):
     def tokenize_function(example):
-        print(example["label"])
-        print(example["label"] == 1)
         if example["label"] == 1:
             return tokenizer(example["sent_more"], example["sent_less"], truncation=True)
         else:
