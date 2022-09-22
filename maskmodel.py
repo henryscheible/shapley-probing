@@ -21,8 +21,8 @@ class MaskModel(nn.Module):
         self.real_model = real_model
         self.head_mask = head_mask
         self.true_prev = True
-        self.prev_mask = torch.ones_like(head_mask).flatten()
-        self.u = torch.zeros_like(head_mask).flatten()
+        self.prev_mask = torch.ones_like(head_mask).to("cuda").flatten()
+        self.u = torch.zeros_like(head_mask).to("cuda").flatten()
         self.tracker = open("tracker.txt", "a")
 
     def track(self, head, acc):
