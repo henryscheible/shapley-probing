@@ -1,7 +1,10 @@
 import json
 from collections import defaultdict
+
+import numpy as np
 import torch
 from torch import nn
+
 
 # Copied with some modifications from https://gist.github.com/Helw150/9e9f5320fd49646ac893eec34f41bf0d
 
@@ -29,7 +32,7 @@ class MaskModel(nn.Module):
             self.baseline = acc
         self.prev = acc
         if self.counter % 100 == 0:
-            self.tracker.write(str(self.u.sum()+"-"+str(self.counter)+"\n"))
+            self.tracker.write(str(self.u.sum() + "-" + str(self.counter) + "\n"))
             self.tracker.flush()
         self.counter += 1
 
@@ -105,4 +108,3 @@ class MaskModel(nn.Module):
             return_dict=return_dict,
             head_mask=self.head_mask,
         )
-

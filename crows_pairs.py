@@ -9,6 +9,18 @@ def load_crows_pairs():
     return load_dataset("crows_pairs")['test']
 
 
+def bernstein(sample):
+    if len(sample) < 2:
+        return -1, 1
+    mean = np.mean(sample)
+    variance = np.std(sample)
+    delta = 0.1
+    R = 1
+    bern_bound = (variance * np.sqrt((2 * np.log(3 / delta))) / len(sample)) + (
+        (3 * R * np.log(3 / delta)) / len(sample)
+    )
+    return mean - bern_bound, mean + bern_bound
+
 def load_model():
     checkpoint = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
