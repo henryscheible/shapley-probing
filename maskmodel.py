@@ -1,4 +1,5 @@
 import json
+import pickle
 from collections import defaultdict
 
 import numpy as np
@@ -52,8 +53,13 @@ class MaskModel(nn.Module):
 
     def finish(self):
         self.tracker.write("Contribution Arrays")
-        self.tracker.write(json.dumps(self.contribs))
-        self.tracker.close()
+        try:
+            pickle.dump(self.contribs)
+            self.tracker.write(json.dumps(self.contribs))
+        except TypeError:
+            print("UNABLE TO WRITE CONTRIBUTION ARRAYS")
+        finally:
+            self.tracker.close()
 
     def set_mask(self, mask):
         mask = mask.reshape(12, 12)
