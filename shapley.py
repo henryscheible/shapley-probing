@@ -61,7 +61,7 @@ def get_crows_pairs_shapley():
     raw_dataset = crows_pairs.load_crows_pairs()
     tokenized_datasets = crows_pairs.process_dataset(raw_dataset, tokenizer)
     eval_dataset = tokenized_datasets["eval"]
-    args = TrainingArguments()
+    args = TrainingArguments("shapley")
     trainer = Trainer(
         model=fake_model,
         args=args,
