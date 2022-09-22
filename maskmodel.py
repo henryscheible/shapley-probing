@@ -32,7 +32,7 @@ class MaskModel(nn.Module):
             self.baseline = acc
         self.prev = acc
         if self.counter % 100 == 0:
-            self.tracker.write(str(self.u.sum() + "-" + str(self.counter) + "\n"))
+            self.tracker.write(str(self.u.sum()) + "-" + str(self.counter) + "\n")
             self.tracker.flush()
         self.counter += 1
 
