@@ -21,6 +21,7 @@ def bernstein(sample):
     )
     return mean - bern_bound, mean + bern_bound
 
+
 def load_model():
     checkpoint = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)

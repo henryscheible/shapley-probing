@@ -30,9 +30,9 @@ def attribute_factory(model, trainer):
                 mask_copy = mask.clone()
                 mask_copy[head] = 1
                 model.set_mask(mask_copy)
-                model.prev = trainer.evaluate()["eval_overall_accuracy"]
+                model.prev = trainer.evaluate()["eval_accuracy"]
             model.set_mask(mask)
-            acc = trainer.evaluate()["eval_overall_accuracy"]
+            acc = trainer.evaluate()["eval_accuracy"]
             print(acc)
             model.track(head, acc)
             model.true_prev = True
