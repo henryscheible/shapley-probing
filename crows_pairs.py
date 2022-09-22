@@ -12,7 +12,7 @@ def load_crows_pairs():
 def load_model():
     checkpoint = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-    model = AutoModelForSequenceClassification.from_pretrained(checkpoint, num_labels=2).to('cuda')
+    model = AutoModelForSequenceClassification.from_pretrained(checkpoint, num_labels=2).to('cuda:1')
     return tokenizer, model
 
 
