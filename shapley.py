@@ -70,7 +70,7 @@ def get_crows_pairs_shapley():
         tokenizer=tokenizer
     )
 
-    attribute = attribute_factory(fake_model)
+    attribute = attribute_factory(fake_model, trainer)
 
     with torch.no_grad():
         model.eval()
