@@ -79,3 +79,7 @@ def get_crows_pairs_shapley():
             torch.ones((1, 144)).to("cuda"), n_samples=3000, show_progress=True
         )
     fake_model.finish()
+
+
+if __name__ == "__main__":
+    get_crows_pairs_shapley()
