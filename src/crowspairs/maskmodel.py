@@ -38,28 +38,23 @@ class MaskModel(nn.Module):
         self.sample_limit = 1000
         self.prev_mask = torch.ones_like(head_mask).to("cuda").flatten()
         self.u = torch.zeros_like(head_mask).to("cuda").flatten()
-        self.tracker = open("tracker.txt", "a")
+        self.tracker = open("out.txt", "a")
 
     def track(self, head, acc):
         if head is not None:
-            self.contribs[head].append(self.prev - acc)
+            self.contribs[head.item()].append(self.prev - acc)
         else:
             self.baseline = acc
         self.prev = acc
         if self.counter % 100 == 0:
-            self.tracker.write(str(self.u.sum()) + "-" + str(self.counter) + "\n")
+            self.tracker.write(str(self.u.sum().item()) + "-" + str(self.counter) + "\n")
             self.tracker.flush()
         self.counter += 1
 
     def finish(self):
         self.tracker.write("Contribution Arrays")
-        try:
-            pickle.dump(self.contribs)
-            self.tracker.write(json.dumps(self.contribs))
-        except TypeError:
-            print("UNABLE TO WRITE CONTRIBUTION ARRAYS")
-        finally:
-            self.tracker.close()
+        self.tracker.write(json.dumps(self.contribs))
+        self.tracker.close()
 
     def set_mask(self, mask):
         mask = mask.reshape(12, 12)
@@ -74,7 +69,7 @@ class MaskModel(nn.Module):
 
     def active(self, head):
         def active_memo(head):
-            contribs = np.array(self.contribs[head])
+            contribs = np.array(self.contribs[head.item()])
             lower, upper = bernstein(contribs)
             if lower > -0.01:
                 return False

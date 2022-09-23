@@ -1,3 +1,4 @@
+import os
 import signal
 import sys
 
@@ -7,7 +8,8 @@ from captum.attr import ShapleyValueSampling
 import crows_pairs
 from maskmodel import MaskModel
 
-CHECKPOINT = "./test-trainer/checkpoint-450/"
+CHECKPOINT = "henryscheible/crows_pairs_bert"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 # Copied with some modifications from https://gist.github.com/Helw150/9e9f5320fd49646ac893eec34f41bf0d
@@ -76,7 +78,7 @@ def get_crows_pairs_shapley():
         model.eval()
         sv = ShapleyValueSampling(attribute)
         attribution = sv.attribute(
-            torch.ones((1, 144)).to("cuda"), n_samples=3000, show_progress=True
+            torch.ones((1, 144)).to("cuda"), n_samples=25, show_progress=True
         )
     fake_model.finish()
 
