@@ -56,7 +56,7 @@ def get_crows_pairs_shapley():
         model.eval()
         sv = ShapleyValueSampling(attribute)
         attribution = sv.attribute(
-            torch.ones((1, 144)).to("cuda"), n_samples=1, show_progress=True
+            torch.ones((1, 144)).to("cuda"), n_samples=3000, show_progress=True
         )
 
     print(attribution)
