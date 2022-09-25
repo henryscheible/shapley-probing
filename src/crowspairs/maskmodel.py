@@ -12,20 +12,6 @@ from torch import nn
 def construct_array():
     return []
 
-
-def bernstein(sample):
-    if len(sample) < 2:
-        return -1, 1
-    mean = np.mean(sample)
-    variance = np.std(sample)
-    delta = 0.1
-    R = 1
-    bern_bound = (variance * np.sqrt((2 * np.log(3 / delta))) / len(sample)) + (
-        (3 * R * np.log(3 / delta)) / len(sample)
-    )
-    return mean - bern_bound, mean + bern_bound
-
-
 class MaskModel(nn.Module):
     def __init__(self, real_model, head_mask):
         super(MaskModel, self).__init__()
@@ -40,62 +26,10 @@ class MaskModel(nn.Module):
         self.u = torch.zeros_like(head_mask).to("cuda").flatten()
         self.tracker = open("out.txt", "a")
 
-    def track(self, head, acc):
-        if head is not None:
-            self.contribs[head.item()].append(self.prev - acc)
-        else:
-            self.baseline = acc
-        self.prev = acc
-        if self.counter % 100 == 0:
-            self.tracker.write(str(self.u.sum().item()) + "-" + str(self.counter) + "\n")
-            self.tracker.flush()
-        self.counter += 1
-
-    def finish(self):
-        self.tracker.write("Contribution Arrays")
-        self.tracker.write(json.dumps(self.contribs))
-        self.tracker.close()
-
     def set_mask(self, mask):
         mask = mask.reshape(12, 12)
         self.head_mask = mask
 
-    def get_head(self, mask):
-        head = (mask.reshape(-1) != self.prev_mask.reshape(-1)).nonzero(as_tuple=True)[
-            0
-        ]
-        self.prev_mask = mask
-        return head
-
-    def active(self, head):
-        def active_memo(head):
-            contribs = np.array(self.contribs[head.item()])
-            lower, upper = bernstein(contribs)
-            if lower > -0.01:
-                return False
-            elif len(contribs) > self.sample_limit:
-                return False
-            return True
-
-        stored = self.u[head]
-        if head == None:
-            return True
-        elif stored == 1:
-            return False
-        else:
-            is_active = active_memo(head)
-            if is_active:
-                return True
-            else:
-                self.u[head] = 1
-                return False
-
-    def reset(self):
-        print("RESET")
-        self.true_prev = True
-        self.prev_mask = torch.ones_like(self.prev_mask).flatten()
-        self.head_mask = torch.ones_like(self.head_mask)
-        self.prev = self.baseline
 
     # Copied from transformers.models.bert.modeling_bert.BertModel.forward
     def forward(

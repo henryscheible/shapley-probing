@@ -1,12 +1,16 @@
+import json
 import os
 import signal
 import sys
 
 import torch
+import transformers
 from transformers import AutoModelForSequenceClassification, Trainer, TrainingArguments, AutoTokenizer
 from captum.attr import ShapleyValueSampling
 import crows_pairs
 from maskmodel import MaskModel
+
+from transformers.trainer_callback import PrinterCallback
 
 CHECKPOINT = "henryscheible/crows_pairs_bert"
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -17,28 +21,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def attribute_factory(model, trainer):
     def attribute(mask):
         mask = mask.flatten()
-        if mask.sum() == 1:
-            model.reset()
-        mask = mask == 0  # invert mask order
-        if not mask.sum() == 144:
-            head = model.get_head(mask)
-        else:
-            head = None
-        if not model.active(head) or mask.sum() <= 72:
-            acc = model.prev
-            model.true_prev = False
-        else:
-            if not model.true_prev:
-                mask_copy = mask.clone()
-                mask_copy[head] = 1
-                model.set_mask(mask_copy)
-                model.prev = trainer.evaluate()["eval_accuracy"]
-            model.set_mask(mask)
-            acc = trainer.evaluate()["eval_accuracy"]
-            print(acc)
-            model.track(head, acc)
-            model.true_prev = True
-        acc = -1 * acc
+        model.set_mask(mask)
+        acc = trainer.evaluate()["eval_accuracy"]
         return acc
 
     return attribute
@@ -46,15 +30,7 @@ def attribute_factory(model, trainer):
 
 def get_crows_pairs_shapley():
     fake_model = None
-
-    def signal_handler(signal, frame):
-        print("You pressed Ctrl+C!")
-        print(signal)  # Value is 2 for CTRL + C
-        print(frame)  # Where your execution of program is at moment - the Line Number
-        fake_model.finish()
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
+    transformers.logging.set_verbosity_error()
 
     mask = torch.ones((1, 144)).to("cuda")
     model = AutoModelForSequenceClassification.from_pretrained(CHECKPOINT)
@@ -63,7 +39,7 @@ def get_crows_pairs_shapley():
     raw_dataset = crows_pairs.load_crows_pairs()
     tokenized_datasets = crows_pairs.process_dataset(raw_dataset, tokenizer)
     eval_dataset = tokenized_datasets["eval"]
-    args = TrainingArguments("shapley")
+    args = TrainingArguments("shapley", log_level="error", disable_tqdm=True)
     trainer = Trainer(
         model=fake_model,
         args=args,
@@ -72,15 +48,21 @@ def get_crows_pairs_shapley():
         tokenizer=tokenizer
     )
 
+    trainer.remove_callback(PrinterCallback)
+
     attribute = attribute_factory(fake_model, trainer)
 
     with torch.no_grad():
         model.eval()
         sv = ShapleyValueSampling(attribute)
         attribution = sv.attribute(
-            torch.ones((1, 144)).to("cuda"), n_samples=25, show_progress=True
+            torch.ones((1, 144)).to("cuda"), n_samples=1, show_progress=True
         )
-    fake_model.finish()
+
+    print(attribution)
+
+    with open("contribs.txt", "a") as file:
+        file.write(json.dumps(attribution.flatten().tolist()))
 
 
 if __name__ == "__main__":
